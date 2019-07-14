@@ -4,8 +4,7 @@ MFRC522_HandleTypeDef MF_typedef;
 
 
 //private functions
-static HAL_StatusTypeDef MFRC522_readData(uint8_t Addr,uint8_t *Data,uint8_t Size);
-static HAL_StatusTypeDef MFRC522_writeData(uint8_t Addr,uint8_t *Data,uint8_t Size);
+
 void MFRC522_init(MFRC522_HandleTypeDef MF_config)
 {
 	/*
@@ -18,20 +17,100 @@ void MFRC522_init(MFRC522_HandleTypeDef MF_config)
 	MF_typedef.CS_Pin=MF_config.CS_Pin;
 }
 
-void MFRC522_reset(void)
+HAL_StatusTypeDef MFRC522_reset(void)
 {
 	/*
 	@braif: reset the all registers of MFRC522
+	@return: HAL_OK,HAL_ERROR
 	*/
+	if(MFRC522_writeReg((uint8_t *)MFRC522_REG_COMMAND,(uint8_t *)COMMAND_RESET,1)!=HAL_OK)
+		return HAL_ERROR;
 	
+	return HAL_OK;
 }
 
 void MFRC522_setDefault(void)
 {
 	
 }
+HAL_StatusTypeDef MFRC522_antennaOn(void)
+{
+	/*
+	@brief: turn on antenna 
+	
+	@return: HAL_OK,HAL_ERROR
+	*/
+	uint8_t wr_Data=0;
+	wr_Data|=(TX_CONTROL_Tx2RFEn |TX_CONTROL_Tx2RFEn); //(re_Data|0x03)
+	if (MFRC522_setBitReg((uint8_t *)MFRC522_REG_TX_CONTROL,wr_Data)!=HAL_OK)
+		return HAL_ERROR;
+	
+	return HAL_OK;
+}
+HAL_StatusTypeDef MFRC522_antennaOFF(void)
+{
+	/*
+	@brief: turn off antenna 	
+	@return: HAL_OK,HAL_ERROR
+	*/
+	uint8_t wr_Data=0;
+	wr_Data|=(TX_CONTROL_Tx2RFEn |TX_CONTROL_Tx2RFEn); //(re_Data|0x03)
+	if (MFRC522_clearBitReg((uint8_t *)MFRC522_REG_TX_CONTROL,wr_Data)!=HAL_OK)
+		return HAL_ERROR;
+	
+	return HAL_OK;
+}
+HAL_StatusTypeDef MFRC522_setBitReg(uint8_t *Addr,uint8_t Mask)
+{
+	/*
+	@brief: set MFRC522 reg address
+	@steps:read value of reg ---> set bits ---> write value of reg
+	
+	@Addr: register address
+	@Mask: value of mask
+	
+	@return: HAL_OK,HAL_ERROR
+	*/
 
-static HAL_StatusTypeDef MFRC522_readData(uint8_t Addr,uint8_t *Data,uint8_t Size)
+	uint8_t re_Data=0,wr_Data=0;
+	//read value of register
+	if (MFRC522_readReg(Addr,&re_Data,1)!=HAL_OK)
+		return HAL_ERROR;
+	//set bits 
+	wr_Data=re_Data|Mask;
+	//write value of register
+	if (MFRC522_writeReg(Addr,&wr_Data,1)!=HAL_OK)
+		return HAL_ERROR;
+	
+	return HAL_OK;
+}
+
+HAL_StatusTypeDef MFRC522_clearBitReg(uint8_t *Addr,uint8_t Mask)
+{
+	/*
+	@brief: set MFRC522 reg address
+	@steps:read value of reg ---> clear bits ---> write value of reg
+	
+	@Addr: register address
+	@Mask: value of mask
+	
+	@return: HAL_OK,HAL_ERROR
+	*/
+
+	uint8_t re_Data=0,wr_Data=0;
+	//read value of register
+	if (MFRC522_readReg(&Addr,&re_Data,1)!=HAL_OK)
+		return HAL_ERROR;
+	//clear bit 
+	wr_Data=re_Data&(~Mask);
+	//write value of register
+	if (MFRC522_writeReg(&Addr,&wr_Data,1)!=HAL_OK)
+		return HAL_ERROR;
+	
+	return HAL_OK;
+}	
+	
+HAL_StatusTypeDef MFRC522_readReg(uint8_t *Addr,uint8_t *Data,uint8_t Size)
 {
 	/*
 	@brief:
@@ -58,7 +137,7 @@ static HAL_StatusTypeDef MFRC522_readData(uint8_t Addr,uint8_t *Data,uint8_t Siz
 	MSB is set to logic 1. To write data to the MFRC522 the MSB must be set to logic 0. Bits 6
 	to 1 define the address and the LSB is set to logic 0.
 	*/
-	Addr_Data[0]=((Addr<<1)&0x7E)|0x80;
+	Addr_Data[0]=((*Addr<<1)&0x7E)|0x80;
 	
 	
 	//array of address
@@ -77,7 +156,7 @@ static HAL_StatusTypeDef MFRC522_readData(uint8_t Addr,uint8_t *Data,uint8_t Siz
 	
 }
 
-static HAL_StatusTypeDef MFRC522_writeData(uint8_t Addr,uint8_t *Data,uint8_t Size)
+HAL_StatusTypeDef MFRC522_writeReg(uint8_t *Addr,uint8_t *Data,uint8_t Size)
 {
 	/*
 	@brief:

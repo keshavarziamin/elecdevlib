@@ -10,7 +10,14 @@
 #define MFRC522_ChipSelect_ON()    HAL_GPIO_WritePin(MF_typedef.CS_port,MF_typedef.CS_Pin,GPIO_PIN_RESET)   
 #define MFRC522_ChipSelect_OFF()    HAL_GPIO_WritePin(MF_typedef.CS_port,MF_typedef.CS_Pin,GPIO_PIN_SET)
 
-
+//MF522 command bits
+#define COMMAND_IDLE 				0x00 //NO action; cancel current commands
+#define COMMAND_AUTHENT 		0x0E //verify password key
+#define COMMAND_RECEIVE 		0x08 //receive data
+#define COMMAND_TRANSMIT 		0x04 //send data
+#define COMMAND_TRANSCEIVE 	0x0C //send and receive data
+#define COMMAND_RESET 	0x0F //reset
+#define COMMAND_CALCCRC 		0x03 //CRC check and caculation
 
 // MFRC522 Registers
 // Page 0: Command and Status
@@ -112,7 +119,19 @@ the default value of logic 1 ensures that the output level on pin IRQ is 3-state
 
 
 
-
+//TxControl register (address 14h)
+#define TX_CONTROL_InvTx2RFOn    	0x80		//output signal on pin TX2 inverted when driver TX2 is enabled
+#define TX_CONTROL_InvTx1RFOn			0x40		//output signal on pin TX1 inverted when driver TX1 is enabled
+#define TX_CONTROL_InvTx2RFOff		0x20		//output signal on pin TX2 inverted when driver TX2 is disabled
+#define TX_CONTROL_InvTx1RFOff		0x10		//output signal on pin TX1 inverted when driver TX1 is disabled
+/*
+if Tx2CW=1 then  output signal on pin TX2 continuously delivers the unmodulated
+13.56 MHz energy carrier
+if Tx2CW=0 then Tx2CW bit is enabled to modulate the 13.56 MHz energy carrier
+*/
+#define TX_CONTROL_Tx2CW					0x08
+#define TX_CONTROL_Tx2RFEn				0x02 	//output signal on pin TX2 delivers the 13.56 MHz energy carrier modulated by the transmission data
+#define TX_CONTROL_Tx1RFEn				0x01  //output signal on pin TX1 delivers the 13.56 MHz energy carrier modulated by the transmission data
 
 #define MFRC522_DUMMY									0x00		// Dummy byte
 #define MFRC522_MAX_LEN								16			// Buf len byte
@@ -130,9 +149,22 @@ typedef struct
 void MFRC522_init(MFRC522_HandleTypeDef MF_config);
 /*
 */
-void MFRC522_reset(void);
+HAL_StatusTypeDef MFRC522_reset(void);
 /*
 */
 void MFRC522_setDefault(void);
 
+/*
+*/
+HAL_StatusTypeDef MFRC522_setBitReg(uint8_t *Addr,uint8_t Mask);
+/*
+*/
+HAL_StatusTypeDef MFRC522_clearBitReg(uint8_t *Addr,uint8_t Mask);
+
+/*
+*/
+HAL_StatusTypeDef MFRC522_readReg(uint8_t *pAddr,uint8_t *Data,uint8_t Size);
+/*
+*/
+HAL_StatusTypeDef MFRC522_writeReg(uint8_t *Addr,uint8_t *Data,uint8_t Size);
 #endif
