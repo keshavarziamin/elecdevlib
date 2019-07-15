@@ -10,11 +10,20 @@ void MFRC522_init(MFRC522_HandleTypeDef MF_config)
 	/*
 	@braif: initializing the MFRC522
 					1.set hardware port to connect to device
-					2.set default parameter value 
+					2.reset device
+					3.set default parameter value 
+					4.turn on antenna
 	*/
+	//config SPI port
 	MF_typedef.SPI=MF_config.SPI;
 	MF_typedef.CS_port=MF_config.CS_port;
 	MF_typedef.CS_Pin=MF_config.CS_Pin;
+	
+	MFRC522_reset();
+	//set default parameter
+	MFRC522_setDefault();
+	MFRC522_antennaOn();
+
 }
 
 HAL_StatusTypeDef MFRC522_reset(void)
@@ -31,6 +40,16 @@ HAL_StatusTypeDef MFRC522_reset(void)
 
 void MFRC522_setDefault(void)
 {
+	
+	//Timer: TPrescaler*TreloadVal/6.78MHz = 24ms
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_T_MODE,(uint8_t *)0x8D,1); //Tauto=1; f(Timer) = 6.78MHz/TPreScaler
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_T_PRESCALER,(uint8_t *)0x3E,1);
+	
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_T_RELOAD_H,(uint8_t*)0x00,1);
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_T_RELOAD_L,(uint8_t*)30,1);
+	
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_TX_AUTO,(uint8_t *)0x40,1);
+	MFRC522_writeReg((uint8_t *)MFRC522_REG_MODE,(uint8_t *)0x3D,1);
 	
 }
 HAL_StatusTypeDef MFRC522_antennaOn(void)
