@@ -95,7 +95,7 @@
 //CommandReg register (address 01h)
 
 #define COMMAND_RcvOff 0x20 	 //analog part of the receiver is switched off
-#define COMMAND_RESET 0x20			// reset value: 20h bit allocation
+
 
 //ComIEnReg register (address 02h);
 #define COMIEN_TimerIEN 		0x01 // allows the timer interrupt request (TimerIRq bit) to be propagated to pin IRQ
@@ -167,4 +167,10 @@ HAL_StatusTypeDef MFRC522_readReg(uint8_t *pAddr,uint8_t *Data,uint8_t Size);
 /*
 */
 HAL_StatusTypeDef MFRC522_writeReg(uint8_t *Addr,uint8_t *Data,uint8_t Size);
+/*
+*/
+HAL_StatusTypeDef MFRC522_antennaOn(void);
+/*
+*/
+HAL_StatusTypeDef MFRC522_antennaOFF(void);
 #endif

@@ -158,7 +158,7 @@ HAL_StatusTypeDef MFRC522_readReg(uint8_t *Addr,uint8_t *Data,uint8_t Size)
 	*/
 	Addr_Data[0]=((*Addr<<1)&0x7E)|0x80;
 	
-	
+
 	//array of address
 	for (int m=0;m<Size;m++)
 		Addr_Data[m+1]=Addr_Data[m]+1;
