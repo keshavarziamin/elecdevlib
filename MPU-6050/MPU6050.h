@@ -93,20 +93,37 @@
 #define MPU6050_REG_WHO_AM_I                0X75
 
 
-
-
+//////////////////////////////
+#define MPU6050_GYRO_FS_250 			0x00
+#define MPU6050_GYRO_FS_500				0x04
+#define MPU6050_GYRO_FS_1000			0x08
+#define MPU6050_GYRO_FS_2000			0x0C
+//////////////////////////////
+#define MPU6050_Accel_FS_2g			0x00
+#define MPU6050_Accel_FS_4g			0x04
+#define MPU6050_Accel_FS_8g     0x08
+#define MPU6050_Accel_FS_16g    0x0C
+////////////////////////////////////
 
 //
+typedef enum 
+{
+  FULL = 0x40, 
+  OLDEST = ~FULL
+} FIFOMode;
+
 typedef struct{
 	I2C_HandleTypeDef *i2c;
+	FIFOMode FM;
+	uint8_t GYRO_FS_scale;
 } MPU6050_HandleTypedef;
 
 
 //FUNCTIONS
 void MPU6050_init(I2C_HandleTypeDef *hi2c);
 
-HAL_StatusTypeDef MPU6050_readData(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
-HAL_StatusTypeDef MPU6050_writeData(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
+HAL_StatusTypeDef MPU6050_readReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
+HAL_StatusTypeDef MPU6050_writeReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 
 
 
