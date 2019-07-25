@@ -21,6 +21,30 @@ void MPU6050_init(MPU6050_HandleTypedef MPU_conf)
 	MPU6050_initGyro(MPU6050_GYRO_FS_500);
 	MPU6050_initAccel(MPU6050_Accel_FS_2g);
 }
+HAL_StatusTypeDef MPU6050_getAccel(uint8_t *Accel)
+{
+	
+}
+uint16_t MPU6050_getTempture(void)
+{
+	/*
+	To convert the output of the temperature sensor to degrees
+	C please use the formula below:
+	TEMP_degC = ((TEMP_OUT –RoomTemp_Offset)/Temp_Sensitivity)+ 21degC
+	*/
+	uint8_t temp[2];
+	uint16_t temp_16=0x0000;
+	float TEMP_degC=0.0;
+	
+	if (MPU6050_readReg(MPU6050_REG_TEMP_OUT_H,temp,2)!=HAL_OK)
+		return 0xFFFF;
+	
+	temp_16=(temp[1]<<8|temp[0]);
+	
+	//convert to degree C
+	TEMP_degC=((float)(temp_16-MPU6050_TEMPTURE_OFFSET)/(float)MPU6050_TEMPTURE_SENSITIVITY)+21;
+	return temp_16;
+}
 HAL_StatusTypeDef MPU6050_enableTempture(FunctionalState EN)
 {
 	if (EN==DISABLE)

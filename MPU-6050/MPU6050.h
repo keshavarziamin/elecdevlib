@@ -8,6 +8,9 @@
 //address of device 
 #define MPU6050_ADDRESS 										0xD0
 #define MPU6050_MEM_SIZE										0x0F
+//offsets 
+#define MPU6050_TEMPTURE_OFFSET							-521
+#define MPU6050_TEMPTURE_SENSITIVITY				340
 //registers
 #define MPU6050_REG_SELF_TEST_X							0X0D
 #define MPU6050_REG_SELF_TEST_Y             0X0E
@@ -92,7 +95,14 @@
 #define MPU6050_REG_FIFO_R_W                0X74
 #define MPU6050_REG_WHO_AM_I                0X75
 
-
+//////////////////////////////
+#define MPU6050_CONFIG_FIFOMODE   0x40
+///////////////////////////////
+#define MPU6050_PWR_MGMT_1_RST   					0x80
+#define MPU6050_PWR_MGMT_1_SLEEP 					0x40
+#define MPU6050_PWR_MGMT_1_CYCLE				 	0x20
+#define MPU6050_PWR_MGMT_1_GYRO_STANDBY 	0x10
+#define MPU6050_PWR_MGMT_1_TEMP_DIS				0x08
 //////////////////////////////
 #define MPU6050_GYRO_FS_250 			0x00
 #define MPU6050_GYRO_FS_500				0x04
@@ -108,8 +118,8 @@
 //
 typedef enum 
 {
-  FULL = 0x40, 
-  OLDEST = ~FULL
+  FULL = 1, 
+  OLDEST = !FULL
 } FIFOMode;
 
 typedef struct{
@@ -120,15 +130,36 @@ typedef struct{
 
 
 //FUNCTIONS
-void MPU6050_init(I2C_HandleTypeDef *hi2c);
+void MPU6050_init(MPU6050_HandleTypedef MPU_conf);
 
 HAL_StatusTypeDef MPU6050_readReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 HAL_StatusTypeDef MPU6050_writeReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 
+/*
 
-
-
-
+*/
+uint16_t MPU6050_getTempture(void);
+/*
+When set to ‘1’, when the FIFO is full, additional writes will not be written to
+FIFO. When set to ‘0’, when the FIFO is full, additional writes will be written
+to the FIFO, replacing the oldest data.
+*/
+HAL_StatusTypeDef MPU6050_FIFOMode(FIFOMode FM);
+/*
+1 – Reset the internal registers and restores the default settings. Write a 1 to
+set the reset, the bit will auto clear.
+*/
+HAL_StatusTypeDef MPU6050_RESET(void);
+/*
+When set, the chip is set to sleep mode
+*/
+HAL_StatusTypeDef MPU6050_Sleep(FunctionalState EN);
+/*
+When set, the gyro drive and pll circuitry are enabled, but the sense paths
+are disabled. This is a low power mode that allows quick enabling of the
+gyros.
+*/
+HAL_StatusTypeDef MPU6050_standbyGyro(FunctionalState EN);
 
 #endif
 
