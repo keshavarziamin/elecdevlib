@@ -4,8 +4,10 @@
 
 #include "stm32f4xx_hal.h"
 #include "i2c.h"
-#include "spi.h"
 
+//address of device 
+#define MPU6050_ADDRESS 										0xD0
+#define MPU6050_MEM_SIZE										0x0F
 //registers
 #define MPU6050_REG_SELF_TEST_X							0X0D
 #define MPU6050_REG_SELF_TEST_Y             0X0E
@@ -103,8 +105,8 @@ typedef struct{
 //FUNCTIONS
 void MPU6050_init(I2C_HandleTypeDef *hi2c);
 
-void MPU6050_readData(uint8_t *Addr,uint8_t *Data,uint8_t Size);
-void MPU6050_writeData(uint8_t *Addr,uint8_t *Data,uint8_t Size );
+HAL_StatusTypeDef MPU6050_readData(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
+HAL_StatusTypeDef MPU6050_writeData(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 
 
 
