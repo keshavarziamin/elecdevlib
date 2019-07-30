@@ -109,10 +109,10 @@
 #define MPU6050_GYRO_FS_1000			0x08
 #define MPU6050_GYRO_FS_2000			0x0C
 //////////////////////////////
-#define MPU6050_Accel_FS_2g			0x00
-#define MPU6050_Accel_FS_4g			0x04
-#define MPU6050_Accel_FS_8g     0x08
-#define MPU6050_Accel_FS_16g    0x0C
+#define MPU6050_ACCEL_FS_2g			0x00    //16,384
+#define MPU6050_ACCEL_FS_4g			0x04		//8,192
+#define MPU6050_ACCEL_FS_8g     0x08		//4,096
+#define MPU6050_ACCEL_FS_16g    0x0C		//2,048
 ////////////////////////////////////
 
 //
@@ -123,9 +123,12 @@ typedef enum
 } FIFOMode;
 
 typedef struct{
-	I2C_HandleTypeDef *i2c;
+	I2C_HandleTypeDef i2c;
 	FIFOMode FM;
+	FunctionalState sleepState;
+	FunctionalState temptureState;
 	uint8_t GYRO_FS_scale;
+	uint8_t ACCEL_FS_scale;
 } MPU6050_HandleTypedef;
 
 
@@ -135,10 +138,39 @@ void MPU6050_init(MPU6050_HandleTypedef MPU_conf);
 HAL_StatusTypeDef MPU6050_readReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 HAL_StatusTypeDef MPU6050_writeReg(uint8_t RegAddr,uint8_t *Data,uint16_t Size);
 
+
+//////////temputure//////////////
 /*
 
 */
-uint16_t MPU6050_getTempture(void);
+HAL_StatusTypeDef MPU6050_getTempture(float *TEMP_degC);
+/*
+When set to disable, this bit disables the temperature sensor.
+*/
+HAL_StatusTypeDef MPU6050_enableTempture(FunctionalState EN);
+
+
+/////////////Accelerometer//////////////////
+/*
+*/
+HAL_StatusTypeDef MPU6050_getAccel(float *AccelData);
+
+
+///////////// Gyroscope////////////////
+
+/*
+When set, the gyro drive and pll circuitry are enabled, but the sense paths
+are disabled. This is a low power mode that allows quick enabling of the
+gyros.
+*/
+HAL_StatusTypeDef MPU6050_standbyGyro(FunctionalState EN);
+
+/**/
+HAL_StatusTypeDef MPU6050_getGyro(uint16_t *GyroData);
+
+
+
+
 /*
 When set to ‘1’, when the FIFO is full, additional writes will not be written to
 FIFO. When set to ‘0’, when the FIFO is full, additional writes will be written
@@ -154,12 +186,7 @@ HAL_StatusTypeDef MPU6050_RESET(void);
 When set, the chip is set to sleep mode
 */
 HAL_StatusTypeDef MPU6050_Sleep(FunctionalState EN);
-/*
-When set, the gyro drive and pll circuitry are enabled, but the sense paths
-are disabled. This is a low power mode that allows quick enabling of the
-gyros.
-*/
-HAL_StatusTypeDef MPU6050_standbyGyro(FunctionalState EN);
+
 
 #endif
 
