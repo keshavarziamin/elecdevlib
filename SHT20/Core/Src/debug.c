@@ -21,3 +21,10 @@ int _write(int file,char *ptr, int len){
 		 __io_putchar(*ptr++);
 	 return len;
 }
+
+int print_hex(char *txt,uint8_t *array,uint16_t len){
+	printf(txt);
+	for(int i=0;i<len;i++)
+		printf("%02x ",array[i]);
+	printf("\r\n");
+}

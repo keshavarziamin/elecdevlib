@@ -12,7 +12,10 @@
 #include "gpio.h"
 #include "i2c.h"
 
+#define PRINT_DEBUG 1
 
+
+//////////////////////////////////////define//////////////////////////////////////////////////////////
 
 
 #define SHT20_I2C_ADDRESS		0x80
@@ -27,10 +30,33 @@
 #define SHT20_CMD_READ_REGISTER		0xE7	//Read user register     '11100111'
 #define SHT20_CMD_RESET				0xFE	//soft reset'11111110'
 
+#define SHT20_MEATUREMENT_RESULATION_12_14		0x00
+#define SHT20_MEATUREMENT_RESULATION_08_12		0x01
+#define SHT20_MEATUREMENT_RESULATION_10_13		0x80
+#define SHT20_MEATUREMENT_RESULATION_11_11		0x81
+////////////////////////////////////////////struct////////////////////////////////////////////////////
+typedef struct SHT20_HardwareTypedef{
+	I2C_HandleTypeDef *pI2C;
+}SHT20_HardwareTypedef;
+
+typedef struct SHT20_ConfigTypedef{
+	FunctionalState onChipHeater;
+	FunctionalState OTPReload;
+	uint8_t meaturementResulation;
+}SHT20_ConfigTypedef;
+
+typedef struct SHT20_RegisterTypedef{
+	uint8_t userRegister;
+	int8_t temperature;
+	uint8_t humidity;
+}SHT20_RegisterTypedef;
 
 
-
-
+typedef struct SHT20_HandelTypedef{
+	SHT20_HardwareTypedef 	hardware;
+	SHT20_ConfigTypedef 	configuration;
+	SHT20_RegisterTypedef	reg;
+}SHT20_HandelTypedef;
 
 
 

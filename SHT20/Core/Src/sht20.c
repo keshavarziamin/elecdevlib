@@ -31,11 +31,17 @@ int sht20_writeRegister(I2C_HandleTypeDef *pI2C,uint8_t CMD,uint8_t *pTrnsData,u
 	TXBuffer[0]=(uint8_t)CMD;
 	memcpy(&TXBuffer[1],pTrnsData,size);
 
-	ret=HAL_I2C_Master_Transmit(pI2C, SHT20_I2C_ADDRESS, TXBuffer, size, 20);
+
+
+	ret=HAL_I2C_Master_Transmit(pI2C, SHT20_I2C_ADDRESS, TXBuffer, size+1, 20);
 
 	free(TXBuffer);
 	if (ret!=HAL_OK)
 		return -1;
+
+	#ifdef PRINT_DEBUG==1
+		print_hex("send data to sht20  => ", TXBuffer, size+1);
+
 	return 0;
 
 }

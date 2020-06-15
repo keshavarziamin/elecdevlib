@@ -14,4 +14,8 @@
 
 #define UART_DEBUG   huart6
 
+
+
+int print_hex(char *txt,uint8_t *array,uint16_t len);
+
 #endif /* DEBUG_H_ */
