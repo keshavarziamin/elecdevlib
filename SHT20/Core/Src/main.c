@@ -95,6 +95,16 @@ int main(void)
   uint8_t data;int ret=0;
   /* USER CODE END 2 */
   uint8_t d1=0x03,d2=0x02;
+
+  SHT20_HandelTypedef SHT;
+  SHT.configuration.OTPReload=DISABLE;
+  SHT.configuration.onChipHeater=ENABLE;
+  SHT.configuration.meaturementResulation=SHT20_MEATUREMENT_RESULATION_12_14;
+  SHT.hardware.pI2C=&hi2c1;
+  printf("start init sht20\r\n");
+  ret=sht20_init(&SHT);
+  printf("return of sht20_init  is %d\r\n",ret);
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -102,16 +112,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  ret=sht20_writeUserRegister(&hi2c1,&d1);
-	  printf("return write is %d and send %x to device",ret,d1);
-	  HAL_Delay(400);
-	  ret=sht20_readUserRegister(&hi2c1, &data);
-	  printf("return is %d and user register is %x\r\n",ret,data);
-	  ret=sht20_writeUserRegister(&hi2c1,&d2);
-	  printf("return write is %d and send %x to device",ret,d2);
-	  HAL_Delay(400);
-	  ret=sht20_readUserRegister(&hi2c1, &data);
-	  printf("return is %d and user register is %x\r\n",ret,data);
 
 
   }

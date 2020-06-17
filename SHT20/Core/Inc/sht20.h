@@ -18,9 +18,14 @@
 //////////////////////////////////////define//////////////////////////////////////////////////////////
 
 
+
+
+
 #define SHT20_I2C_ADDRESS		0x80
 #define SHT20_I2C_WRITE_MODE(X)	((X)&(~0xFE))
 #define SHT20_I2C_READ_MODE(X)	((X)|(~0x01))
+
+#define SHT20_LENGTH_OF_DATA	3
 
 #define SHT20_CMD_T_MSURMT_HM 		0xE3	//Trigger T  measurement (hold master) 		'11100011'
 #define SHT20_CMD_RH_MSURMT_HM 		0xE5 	//Trigger RH measurement (hold master) 		'11100101'
@@ -34,6 +39,8 @@
 #define SHT20_MEATUREMENT_RESULATION_08_12		0x01
 #define SHT20_MEATUREMENT_RESULATION_10_13		0x80
 #define SHT20_MEATUREMENT_RESULATION_11_11		0x81
+#define SHT20_OTP_RELOAD						0x02
+#define SHT20_ON_CHIP_HEATER					0x04
 ////////////////////////////////////////////struct////////////////////////////////////////////////////
 typedef struct SHT20_HardwareTypedef{
 	I2C_HandleTypeDef *pI2C;
@@ -59,20 +66,31 @@ typedef struct SHT20_HandelTypedef{
 }SHT20_HandelTypedef;
 
 
-
+typedef enum{
+	NO_HOLD_MASTER=0U,
+	HOLD_MASTER=!NO_HOLD_MASTER
+}HoldMasterMode;
 
 
 
 
 //////////////////////////////////////////////////////functions////////////////////////////////////
 
-int sht20_writeUserRegister(I2C_HandleTypeDef *pI2C,uint8_t *pRecvData);
-int sht20_readUserRegister(I2C_HandleTypeDef *pI2C,uint8_t *pRecvData);
+int sht20_init(SHT20_HandelTypedef *pSHT);
+
+int sht20_setBitUserRegister(SHT20_HandelTypedef *pSHT,uint8_t pTransData);
+int sht20_clearBitUserRegister(SHT20_HandelTypedef *pSHT,uint8_t pTransData);
+
+int sht20_writeUserRegister(SHT20_HandelTypedef *pSHT,uint8_t *pTransData);
+int sht20_readUserRegister(SHT20_HandelTypedef 	*pSHT,uint8_t *pRecvData);
+
+
 
 
 
 int sht20_readRegister(I2C_HandleTypeDef *pI2C,uint8_t CMD,uint8_t *pRecvData,uint8_t size);
 int sht20_writeRegister(I2C_HandleTypeDef *pI2C,uint8_t CMD,uint8_t *pTrnsData,uint8_t size);
 
+int sht20_readData_hlodMaster(I2C_HandleTypeDef *pI2C,uint8_t CMD,int8_t *pRecvData);
 
 #endif /* SHT20_H_ */

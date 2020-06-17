@@ -16,6 +16,6 @@
 
 
 
-int print_hex(char *txt,uint8_t *array,uint16_t len);
+int printf_hex(char *txt,uint8_t *array,uint16_t len);
 
 #endif /* DEBUG_H_ */
