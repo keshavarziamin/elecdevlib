@@ -92,18 +92,15 @@ int main(void)
   MX_I2C1_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t data;int ret=0;
-  /* USER CODE END 2 */
-  uint8_t d1=0x03,d2=0x02;
-
   SHT20_HandelTypedef SHT;
+  SHT.hardware.pI2C=&hi2c1;
   SHT.configuration.OTPReload=DISABLE;
   SHT.configuration.onChipHeater=ENABLE;
-  SHT.configuration.meaturementResulation=SHT20_MEATUREMENT_RESULATION_12_14;
-  SHT.hardware.pI2C=&hi2c1;
-  printf("start init sht20\r\n");
-  ret=sht20_init(&SHT);
-  printf("return of sht20_init  is %d\r\n",ret);
+  SHT.configuration.meaturementResulation=SHT20_MEATUREMENT_RESULATION_08_12;
+  sht20_init(&SHT);
+  uint8_t data;int ret=0;
+  uint8_t recvTemp[3];
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -112,8 +109,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-
+	  ret= sht20_getTemperature(&SHT,&recvTemp,HOLD_MASTER);
+	  //printf("return of sht20_getTemperature_holdMaster is %d\r\n",ret);
+	 // HAL_Delay(500);
+	  //ret= sht20_getTemperature(&SHT,&recvTemp,NO_HOLD_MASTER);
+	  //printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
+	 // HAL_Delay(500);
+	  //ret= sht20_getHumidity(&SHT,&recvTemp,HOLD_MASTER);
+	  //printf("return of sht20_getTemperature_holdMaster is %d\r\n",ret);
+	  //HAL_Delay(500);
+//	  ret= sht20_getHumidity(&SHT,&recvTemp,NO_HOLD_MASTER);
+	  printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
+	  HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
