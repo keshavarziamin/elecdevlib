@@ -115,11 +115,11 @@ int main(void)
 	  //ret= sht20_getTemperature(&SHT,&recvTemp,NO_HOLD_MASTER);
 	  //printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
 	 // HAL_Delay(500);
-	  //ret= sht20_getHumidity(&SHT,&recvTemp,HOLD_MASTER);
+	  ret= sht20_getHumidity(&SHT,&recvTemp,HOLD_MASTER);
 	  //printf("return of sht20_getTemperature_holdMaster is %d\r\n",ret);
 	  //HAL_Delay(500);
 //	  ret= sht20_getHumidity(&SHT,&recvTemp,NO_HOLD_MASTER);
-	  printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
+	  //printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
 	  HAL_Delay(500);
   }
   /* USER CODE END 3 */

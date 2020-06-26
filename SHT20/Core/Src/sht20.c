@@ -116,8 +116,11 @@ int sht20_getHumidity(SHT20_HandelTypedef *pSHT,int8_t *pRecvHmty,HoldMasterMode
 	if (SHT20_checkCRC(RxBuffer,(SHT20_LENGTH_OF_DATA-1))!=0)
 		return -4;
 
+	*pRecvHmty=SHT20_conversionHumidity(&RxBuffer);
+
 	#ifdef PRINT_DEBUG
 		printf_hex("humidity data is ", RxBuffer, SHT20_LENGTH_OF_DATA);
+		printf("humidity is %d\r\n",*pRecvHmty);
 	#endif
 	return 0;
 
@@ -135,10 +138,23 @@ int8_t  SHT20_conversionTemperature(uint8_t *data){
 	 */
 	uint16_t St;
 	St=(data[0]<<8)|data[1];
-	printf("ST is %d & %x\r\n",St,St);
-	return (-46.85)+(175.72*((float)St/65546));
+
+	return (-46.85)+(175.72*((float)St/65536));
 }
 
+
+uint8_t SHT20_conversionHumidity(uint8_t *data){
+	/*
+	 * 	With the relative humidity signal output S RH the relative
+		humidity RH is obtained by the following formula (result in
+		%RH), no matter which resolution is chosen:
+		RH=-6+125(Srh/2^16)
+	 */
+	uint16_t Srh;
+	Srh=(data[0]<<8)|data[1];
+
+	return (-6)+(125*((float)Srh/65536));
+}
 int SHT20_checkCRC(uint8_t *data,uint8_t len){
 	//check CRC
 	return 0;
