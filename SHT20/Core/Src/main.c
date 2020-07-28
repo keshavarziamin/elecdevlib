@@ -110,7 +110,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  ret= sht20_getTemperature(&SHT,&recvTemp,HOLD_MASTER);
-	  //printf("return of sht20_getTemperature_holdMaster is %d\r\n",ret);
+	  printf("return of sht20_getTemperature_holdMaster is %d\r\n",ret);
 	 // HAL_Delay(500);
 	  //ret= sht20_getTemperature(&SHT,&recvTemp,NO_HOLD_MASTER);
 	  //printf("return of sht20_getTemperature_noHoldMaster is %d\r\n",ret);
