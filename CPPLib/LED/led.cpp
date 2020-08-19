@@ -21,8 +21,10 @@ void LED::toggel(){
 
 void LED::toggel(uint32_t const& delay){
 	
-	if (HAL_GetTick()-Tick_time>delay){
-		Tick_time=HAL_GetTick(); //reset timer
-		HAL_GPIO_TogglePin(port,pin);
-	}
+	if (HAL_GetTick()-Tick_time>delay) return;
+		
+		
+	Tick_time=HAL_GetTick(); //reset timer
+	HAL_GPIO_TogglePin(port,pin);
+	
 }
