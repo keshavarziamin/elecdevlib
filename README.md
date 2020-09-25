@@ -1,9 +1,3 @@
-
-
 # stm32_library
-
-
-
-"add SHT20_init function"
-modify functions 
+All libraries are developed uisng HAL_library 
  
