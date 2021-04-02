@@ -1,8 +1,8 @@
+#include "stdio.h"
 #include "MFRC522.h"
 
+
 MFRC522_HandleTypeDef MF_typedef;
-
-
 //private functions
 
 void MFRC522_init(MFRC522_HandleTypeDef MF_config)
@@ -38,8 +38,7 @@ HAL_StatusTypeDef MFRC522_reset(void)
 	return HAL_OK;
 }
 
-void MFRC522_setDefault(void)
-{
+void MFRC522_setDefault(void){		
 	
 	//Timer: TPrescaler*TreloadVal/6.78MHz = 24ms
 	MFRC522_writeReg((uint8_t *)MFRC522_REG_T_MODE,(uint8_t *)0x8D,1); //Tauto=1; f(Timer) = 6.78MHz/TPreScaler
@@ -52,8 +51,8 @@ void MFRC522_setDefault(void)
 	MFRC522_writeReg((uint8_t *)MFRC522_REG_MODE,(uint8_t *)0x3D,1);
 	
 }
-HAL_StatusTypeDef MFRC522_antennaOn(void)
-{
+
+HAL_StatusTypeDef MFRC522_antennaOn(void){
 	/*
 	@brief: turn on antenna 
 	
@@ -66,8 +65,8 @@ HAL_StatusTypeDef MFRC522_antennaOn(void)
 	
 	return HAL_OK;
 }
-HAL_StatusTypeDef MFRC522_antennaOFF(void)
-{
+
+HAL_StatusTypeDef MFRC522_antennaOFF(void){
 	/*
 	@brief: turn off antenna 	
 	@return: HAL_OK,HAL_ERROR
