@@ -9,11 +9,14 @@
 #include "glob_func.h"
 
 
-
 //define
 
+
+#define ERR_FLASH_HW		0x01000000
+
+
 #define SIZE_SECTOR			16
-#define SIZE_BLOCK			512
+#define SIZE_BLOCK			528
 #define SIZE_PAGE				4096
 
 #define MAX_WRITE_DATA  1000
@@ -226,4 +229,6 @@ HAL_StatusTypeDef FLASH_getData(FLASH_MEM_HandleTypedef *FM,uint8_t *transmitDat
 
 HAL_StatusTypeDef FLASH_sendData(FLASH_MEM_HandleTypedef *FM,uint8_t *transmitData,uint16_t lengthOfTX);
 
+
+uint32_t Flash_getError(void);
 #endif
