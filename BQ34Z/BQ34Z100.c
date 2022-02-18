@@ -3,10 +3,11 @@
 
 int BQ_init(BQ_HandleTypedef *pBQ)
 {
-	uint8_t CMD,data[2];
+	
 	uint16_t RXD;
+	uint8_t LEDConfig;
 	HAL_Delay(500);
-	uint8_t ret;
+
 	printf("!!!!!!!!!!!!!!!!!!START!!!!!!!!!!!!!!!!!\r\n");
 
 
@@ -17,28 +18,13 @@ int BQ_init(BQ_HandleTypedef *pBQ)
 
 
 	/*step1.Review and Modify the Data Flash Configuration Data.*/ 
-	//check address 
-//	__HAL_RCC_I2C3_FORCE_RESET();
-//	HAL_Delay(4);
-//	__HAL_RCC_I2C3_RELEASE_RESET();
-//	HAL_Delay(100);
-//	HAL_I2C_Init(&hi2c3);
-//	for(uint8_t i=0;i<=255;i++){
-//		HAL_Delay(100);
-//		printf("the address send %x\r\n",i);
-//		ret=HAL_I2C_IsDeviceReady(&hi2c3,i,4,100);
-//		printf("return is %x\r\n",ret);
-//		if(ret==HAL_OK){
-//			printf("the address is %x\r\n",i);
-//		}
-
-//	}
-	
+ 
 		
 	BQ_readCTRL(pBQ,BQ_CTRL_SUB_CONTROL_STATUS,&RXD);
 	printf ("CTRL_STATUS:%x\r\n",RXD);
 	if(BQ_updateDesignCapacity(pBQ)!=0)
-		return -1;
+		//return -1;
+		printf("erooooooor\r\n");
 	printf("!!!!!!!!!!!!!!!!!!update design capacity!!!!!!!!!!!!!!!!!!\r\n");
 	//while(1){};
 	HAL_Delay(200);
@@ -64,6 +50,23 @@ int BQ_init(BQ_HandleTypedef *pBQ)
 	printf("!!!!!!!!!!!!!!!!!!set scale & voltsel!!!!!!!!!!!!!!!!!!\r\n");
 	HAL_Delay(200);
 	
+	
+	//enable state of heath
+	uint8_t stateOfHeath=0x70;
+	if (BQ_clearBitFlashBlock(pBQ,BQ_SUBCLASS_ID_CONFIGURATION_REGISTER,BQ_OFFSET_PACKCONFIGURATION_C,stateOfHeath)!=0)
+		return -6;
+	
+	LEDConfig=0x5C;//0b01011100
+	if (BQ_writeFlashBlock(pBQ,BQ_SUBCLASS_ID_CONFIGURATION_REGISTER,BQ_OFFSET_LED_COMM_CONFIGURATION,&LEDConfig,1)!=0)
+		return -7;
+	
+	
+	/*
+	step4.Determine the Sense Resistor Value
+	*/
+	
+//	 
+	
 //	uint8_t bits=(BQ_BITS_CAL_EN);
 //	if(BQ_setBitFlashBlock(pBQ,BQ_SUBCLASS_ID_CONFIGURATION_REGISTER,BQ_OFFSET_PACKCONFIGURATION,bits)!=0)
 //		return -5;
@@ -78,7 +81,7 @@ int BQ_init(BQ_HandleTypedef *pBQ)
 //		return -1;
 //	printf("!!!!!!!!!!!!!!!!!!setVoltageDivider!!!!!!!!!!!!!!!!!!\r\n");
 	
-
+	return 0;
 }
 
 int BQ_setScale(BQ_HandleTypedef *pBQ)
@@ -537,19 +540,67 @@ int BQ_getDesignCapacity(BQ_HandleTypedef *pBQ,uint16_t *designCapacity)
 	*designCapacity=(uint16_t)((dc[1]<<8)|dc[0]);
 	return 0;
 }
+
+int BQ_getStandardData(BQ_HandleTypedef *pBQ,uint8_t *pData,uint8_t size)
+{
+	uint8_t CMD[2];int ret;
+	CMD[0]=0x00;	//start address
+	static uint32_t counter_error=0;
+	static uint32_t timer_reset=0;
+	
+	
+	ret=BQ_readRegister(pBQ,&CMD[0],1,pData,size);
+	printf("read voltage state is %d\r\n",ret);
+	if (ret!=0){
+		if (HAL_GetTick()-timer_reset>=BQ_RST_TIMER){
+				BQ_resetI2C3();
+				timer_reset=HAL_GetTick();
+				if (counter_error++>=3){
+					setErrorBit(ERR_BAT_HW);
+					memset(pData,0,size);
+					counter_error=0;
+		}
+			}
+		
+		return -1;
+	}
+	counter_error=0;
+	timer_reset=HAL_GetTick();
+	clearErrorBit(ERR_BAT_HW);
+	
+	return 0;
+}
+
+
 int BQ_getVlotage(BQ_HandleTypedef *pBQ)
 {
 	uint8_t CMD[2];int ret;
 	CMD[0]=(uint8_t )((BQ_CMD_VOLTAGE&0xFF00)>>8);
 	CMD[1]=(uint8_t)(BQ_CMD_VOLTAGE&0x00FF);
+	static uint32_t counter_error=0;
+	static uint32_t timer_reset=0;
+	
 	
 	uint8_t volatge[2]={0};
-	ret=BQ_readRegister(pBQ,&CMD[0],1,volatge,2);
-	printf("read voltage state is %d\r\n",ret);
-	if (ret!=0)
+	ret=BQ_readRegister(pBQ,&CMD[0],2,volatge,2);
+	//printf("read voltage state is %d\r\n",ret);
+	if (ret!=0){
+		if (HAL_GetTick()-timer_reset>=BQ_RST_TIMER){
+				BQ_resetI2C3();
+				timer_reset=HAL_GetTick();
+				if (counter_error++>=3){
+					setErrorBit(ERR_BAT_HW);
+					pBQ->stdReg.voltage=0;
+					counter_error=0;
+		}
+			}
+		
 		return -1;
-	
-	pBQ->Battery.voltage=(uint16_t)((volatge[1]<<8)|volatge[0]);
+	}
+	counter_error=0;
+	timer_reset=HAL_GetTick();
+	clearErrorBit(ERR_BAT_HW);
+	pBQ->stdReg.voltage=(uint16_t)((volatge[1]<<8)|volatge[0]);
 	return 0;
 }
 int BQ_getStateOfCharge(BQ_HandleTypedef *pBQ)
@@ -557,11 +608,52 @@ int BQ_getStateOfCharge(BQ_HandleTypedef *pBQ)
 	uint8_t CMD[2];
 	CMD[0]=(uint8_t )BQ_CMD_STATEOFCHARGE;	
 	uint8_t volatge[2];
-	if (BQ_readRegister(pBQ,&CMD[0],1,&pBQ->Battery.stateOfCharge,1)!=0)
+	if (BQ_readRegister(pBQ,&CMD[0],2,&pBQ->stdReg.stateOfCharge,1)!=0)
 		return -1;
+	
 	
 	return 0;
 }
+int BQ_getFullChargeCapacity(BQ_HandleTypedef *pBQ)
+{
+	uint8_t CMD[2];
+	CMD[0]=(uint8_t )((BQ_CMD_FULLCHARGECAPACITY&0xFF00)>>8);
+	CMD[1]=(uint8_t )((BQ_CMD_FULLCHARGECAPACITY&0x00FF));
+	uint8_t value[2];
+	if (BQ_readRegister(pBQ,&CMD[0],2,&value[0],2)!=0)
+		return -1;
+	
+	memcpy(&pBQ->stdReg.fullChargeCapacity,value,2);
+	return 0;
+}
+
+
+int BQ_getCurrent(BQ_HandleTypedef *pBQ)
+{
+	uint8_t CMD[2];
+	CMD[0]=(uint8_t )((BQ_CMD_EXT_PACKCONFIGURATION & 0xFF00)>>8);
+	CMD[1]=(uint8_t )(BQ_CMD_EXT_PACKCONFIGURATION & 0x00FF);
+	uint8_t value[2];
+	if (BQ_readRegister(pBQ,&CMD[0],2,&value[0],2)!=0)
+		return -1;
+	
+	memcpy(&pBQ->reg.packConfiguration,value,2);
+	return 0;
+}
+
+int BQ_getPackConfiguration(BQ_HandleTypedef *pBQ)
+{
+	uint8_t CMD[2];
+	CMD[0]=(uint8_t )((BQ_CMD_CURRENT&0xFF00)>>8);
+	CMD[1]=(uint8_t )(BQ_CMD_CURRENT&0x00FF);
+	uint8_t value[2];
+	if (BQ_readRegister(pBQ,&CMD[0],2,&value[0],2)!=0)
+		return -1;
+	
+	memcpy(&pBQ->Battery.current,value,2);
+	return 0;
+}
+
 
 int BQ_calibrateVoltageDivider(BQ_HandleTypedef *pBQ,uint16_t appliedVoltage)
 {
@@ -571,8 +663,8 @@ int BQ_calibrateVoltageDivider(BQ_HandleTypedef *pBQ,uint16_t appliedVoltage)
 	for (uint8_t k=0;k<50;k++)
 	{
 		BQ_getVlotage(pBQ);
-		vol[k]=pBQ->Battery.voltage;
-		printf("value of battery is %d\r\n",pBQ->Battery.voltage);
+		vol[k]=pBQ->stdReg.voltage;
+		printf("value of battery is %d\r\n",pBQ->stdReg.voltage);
 		HAL_Delay(100);
 		vol_mean+=vol[k];
 	}
@@ -608,14 +700,14 @@ int BQ_writeRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lengthOfCMD,uint
 	memcpy(Txbuffer,CMD,lengthOfCMD);
 	memcpy(&Txbuffer[lengthOfCMD],TxData,lengthTxData);
 	//show_hex("TXData=>",TxData,lengthTxData);
-	show_hex("BQ:Write Data=>",Txbuffer,lengthOfTxBuffer);
+	//show_hex("BQ:Write Data=>",Txbuffer,lengthOfTxBuffer);
 	
 	while(timeout>0)		
 	{
 		if (HAL_I2C_Master_Transmit(pBQ->Config.i2c,(uint16_t)BQ_I2C_ADDRESS,Txbuffer,lengthOfTxBuffer ,100)!=HAL_OK)
 		{
 			timeout--;
-			printf("timeout =%d\r\n",timeout);	
+		//	printf("timeout =%d\r\n",timeout);	
 			HAL_Delay(200);
 			TxST=-1;
 		}
@@ -627,11 +719,11 @@ int BQ_writeRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lengthOfCMD,uint
 				
 	}
 	
-	if (TxST==-1)		
-		printf("transmition failed\r\n");
-	else
-		printf("transmition is OK\r\n");
-	
+//	if (TxST==-1)		
+//		printf("transmition failed\r\n");
+//	else
+//		printf("transmition is OK\r\n");
+//	
 	memset(Txbuffer,0,lengthOfTxBuffer);
 	free(Txbuffer);
 	return TxST;
@@ -639,14 +731,28 @@ int BQ_writeRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lengthOfCMD,uint
 }
 int BQ_readRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lengthOfCMD,uint8_t *RxData,uint8_t lengthRxData)
 {
-	//show_hex("BQ_CMD=>",CMD,lengthOfCMD);
+	
 	if (HAL_I2C_Master_Transmit(pBQ->Config.i2c,(uint16_t)BQ_I2C_ADDRESS,&CMD[0],1,100)!=HAL_OK)
 		return -1;
 	
 	if(HAL_I2C_Master_Receive(pBQ->Config.i2c,(uint16_t)BQ_I2C_ADDRESS,RxData,lengthRxData,100)!=HAL_OK)
 		return -2;
-	
+	show_hex("BQ_CMD=>",CMD,lengthOfCMD);
 	show_hex("BQ_RxData=>",RxData,lengthRxData);
 	
 	return 0;
+}
+
+
+
+
+
+
+void BQ_resetI2C3(void){
+	__HAL_RCC_I2C3_FORCE_RESET();
+	HAL_Delay(4);
+	__HAL_RCC_I2C3_RELEASE_RESET();
+	HAL_Delay(100);
+	HAL_I2C_Init(&hi2c3);
+	printf("*****************reset I2C3*************\r\n");
 }

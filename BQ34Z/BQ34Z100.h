@@ -8,8 +8,12 @@
 #include "i2c.h"
 #include "glob_func.h"
 #include "math.h"
+#include "alert.h"
+
 
 #define BQ_I2C_ADDRESS 0xAA
+#define BQ_ERR_TIMER  1000*60*2
+#define BQ_RST_TIMER	1000*60*1
 
 //commands
 #define 	BQ_CMD_CONTROL 									0x0001
@@ -106,11 +110,14 @@
 #define BQ_OFFSET_PACKCONFIGURATION					0
 #define BQ_OFFSET_PACKCONFIGURATION_B				2
 #define BQ_OFFSET_PACKCONFIGURATION_C				3
+#define BQ_OFFSET_LED_COMM_CONFIGURATION		4
 #define BQ_OFFSET_NUMBEROFCELL							7
 
 #define BQ_SUBCLASS_ID_CALIBRARTION_DATA 		104
-//
-#define BQ_OFFSET_VOLTAGEDIVIDER					14
+#define BQ_OFFSET_CCGAIN										0
+#define BQ_OFFSET_CCDELTA										4
+#define BQ_OFFSET_VOLTAGEDIVIDER						14
+
 
 
 
@@ -123,28 +130,36 @@
 
 typedef struct BQ_BatteryTypedef
 {
-	uint8_t stateOfCharge;
-	uint16_t fullChargeCapacity;
 	uint8_t numberOfCell;
 	uint8_t scale;
-
-	uint16_t voltage;
 	uint16_t voltageDevider;
 	uint16_t designCapacity;
 	uint16_t designEnergy;
 	uint16_t cellChargeVoltage;
-	uint16_t averageCurrent;
+	
 	uint16_t temperature;
 	uint16_t current;
 }BQ_BatteryTypedef;
-
+typedef struct {
+	
+	uint16_t controlStatus;
+	uint8_t stateOfCharge;
+	uint8_t maxError;
+	uint16_t RemainingCapacity;
+	uint16_t fullChargeCapacity;
+	uint16_t voltage;
+	uint16_t averageCurrent;
+	uint16_t temperature;
+	uint16_t flags;
+	uint16_t current;
+	uint16_t flagsB;
+}BQ_StatndardRegisterTypedef;
 typedef struct
 {
 	uint8_t blockData[32];
-	uint16_t flags;
-	uint16_t flagsB;
+	
 	uint16_t controlStatus;
-	uint16_t PackConfiguration;
+	uint16_t packConfiguration;
 }BQ_RegisterTypedef;
 typedef struct 
 {
@@ -159,7 +174,9 @@ typedef struct
 	BQ_ConfigTypedef Config;
 	BQ_BatteryTypedef Battery;
 	BQ_RegisterTypedef reg;
+	BQ_StatndardRegisterTypedef stdReg;
 }	BQ_HandleTypedef;
+
 
 int BQ_setScale(BQ_HandleTypedef *pBQ);
 int BQ_setNumberOfCell(BQ_HandleTypedef *pBQ,uint8_t number);
@@ -183,12 +200,23 @@ int BQ_setUNSEAL(BQ_HandleTypedef *pBQ);
 int BQ_setSEAL(BQ_HandleTypedef *pBQ);
 int BQ_reset(BQ_HandleTypedef *pBQ);
 
+int BQ_getStandardData(BQ_HandleTypedef *pBQ,uint8_t *pData,uint8_t size);
 int BQ_writeCTRL(BQ_HandleTypedef *pBQ,uint16_t subCMD);
 int BQ_readCTRL(BQ_HandleTypedef *pBQ,uint16_t subCMD,uint16_t *RxData);
 int BQ_init(BQ_HandleTypedef *pBQ);
 int BQ_writeRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lengthOfCMD,uint8_t *TxData,uint8_t lengthTxData);
 int BQ_readRegister(BQ_HandleTypedef *pBQ,uint8_t *CMD,uint8_t lenghtOfCMD,uint8_t *RxData,uint8_t lengthRxData);
 int BQ_getVlotage(BQ_HandleTypedef *pBQ);
+int BQ_getCurrent(BQ_HandleTypedef *pBQ);
+int BQ_getFullChargeCapacity(BQ_HandleTypedef *pBQ);
 int BQ_getDesignCapacity(BQ_HandleTypedef *pBQ,uint16_t *designCapacity);
 int BQ_getStateOfCharge(BQ_HandleTypedef *pBQ);
+int BQ_getCurrent(BQ_HandleTypedef *pBQ);
+
+
+int BQ_setCalibrationMode(BQ_HandleTypedef *pBQ);
+
+
+void BQ_resetI2C3(void);
 #endif
+
